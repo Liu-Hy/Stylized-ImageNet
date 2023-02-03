@@ -39,7 +39,6 @@ parser.add_argument('--print-freq', '-p', default=1, type=int,
 
 
 def main():
-
     global args
     args = parser.parse_args()
 
@@ -56,7 +55,7 @@ def main():
 
     do_style_preprocessing = False
     num_styles = len(os.listdir(style_dir))
-    print("=> Using "+str(num_styles)+" different style images.")
+    print("=> Using " + str(num_styles) + " different style images.")
     all_styles = [[] for _ in range(num_styles)]
     for i, name in enumerate(sorted(os.listdir(style_dir))):
         all_styles[i] = os.path.join(style_dir, name)
@@ -65,10 +64,10 @@ def main():
     transferer = adain.AdaIN(transfer_args)
     print("=> Succesfully loaded style transfer algorithm.")
 
-    style_loader = adain.StyleLoader(style_transferer = transferer,
-                                     style_img_file_list = all_styles,
-                                     rng = np.random.RandomState(seed=49809),
-                                     do_preprocessing = do_style_preprocessing)
+    style_loader = adain.StyleLoader(style_transferer=transferer,
+                                     style_img_file_list=all_styles,
+                                     rng=np.random.RandomState(seed=49809),
+                                     do_preprocessing=do_style_preprocessing)
 
     style_transfer = style_loader.get_style_tensor_function
     print("=> Succesfully created style loader.")
@@ -76,44 +75,42 @@ def main():
     #############################################################
     #         CREATING DATA LOADERS
     #############################################################
- 
+
     class MyDataLoader():
         """Convenient data loading class."""
 
         def __init__(self, root,
-                     transform = transforms.ToTensor(),
-                     target_transform = None,
-                     batch_size = args.batch_size,
-                     num_workers = args.workers,
-                     shuffle = False,
-                     sampler = None):
-
-             self.dataset = datasets.ImageFolder(root = root,
-                                                 transform = transform,
-                                                 target_transform = target_transform)
-             self.loader = torch.utils.data.DataLoader(
-                               dataset = self.dataset,
-                               batch_size = batch_size,
-                               shuffle = shuffle,
-                               sampler = sampler,
-                               num_workers = num_workers,
-                               pin_memory = True)
-
+                     transform=transforms.ToTensor(),
+                     target_transform=None,
+                     batch_size=args.batch_size,
+                     num_workers=args.workers,
+                     shuffle=False,
+                     sampler=None):
+            self.dataset = datasets.ImageFolder(root=root,
+                                                transform=transform,
+                                                target_transform=target_transform)
+            self.loader = torch.utils.data.DataLoader(
+                dataset=self.dataset,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                sampler=sampler,
+                num_workers=num_workers,
+                pin_memory=True)
 
     default_transforms = transforms.Compose([
-                                  transforms.Resize(256),
-                                  transforms.CenterCrop(g.IMG_SIZE),
-                                  transforms.ToTensor()])
+        transforms.Resize(256),
+        transforms.CenterCrop(g.IMG_SIZE),
+        transforms.ToTensor()])
 
-    val_loader = MyDataLoader(root = valdir,
-                              transform = default_transforms,
-                              shuffle = False,
-                              sampler = None)
+    val_loader = MyDataLoader(root=valdir,
+                              transform=default_transforms,
+                              shuffle=False,
+                              sampler=None)
 
-    train_loader = MyDataLoader(root = traindir,
-                                transform = default_transforms,
-                                shuffle = False,
-                                sampler = None)
+    train_loader = MyDataLoader(root=traindir,
+                                transform=default_transforms,
+                                shuffle=False,
+                                sampler=None)
 
     print("=> Succesfully created all data loaders.")
     print("")
@@ -123,21 +120,20 @@ def main():
     #############################################################
 
     print("Preprocessing validation data:")
-    preprocess(data_loader = val_loader,
-               input_transforms = [style_transfer],
-               sourcedir = valdir,
-               targetdir = os.path.join(g.STYLIZED_IMAGENET_PATH, "val/"))
+    preprocess(data_loader=val_loader,
+               input_transforms=[style_transfer],
+               sourcedir=valdir,
+               targetdir=os.path.join(g.STYLIZED_IMAGENET_PATH, "val/"))
 
-    print("Preprocessing training data:")
+    """print("Preprocessing training data:")
     preprocess(data_loader = train_loader,
                input_transforms = [style_transfer],
                sourcedir = traindir,
-               targetdir = os.path.join(g.STYLIZED_IMAGENET_PATH, "train/"))
-
+               targetdir = os.path.join(g.STYLIZED_IMAGENET_PATH, "train/"))"""
 
 
 def preprocess(data_loader, sourcedir, targetdir,
-               input_transforms = None):
+               input_transforms=None):
     """Preprocess ImageNet with certain transformations.
 
     Keyword arguments:
@@ -187,24 +183,24 @@ def preprocess(data_loader, sourcedir, targetdir,
 
             if source_class != current_class:
                 # moving on to new class:
-                # start counter (=index) by 0, update list of files 
+                # start counter (=index) by 0, update list of files
                 # for this new class
                 counter = 0
                 current_class_files = sorted(os.listdir(source_classdir))
-            
+
             current_class = source_class
 
-            target_img_path = os.path.join(target_classdir, 
-                                           current_class_files[counter].replace(".JPEG", ".png")) 
+            target_img_path = os.path.join(target_classdir,
+                                           current_class_files[counter].replace(".JPEG", ".png"))
 
-            save_image(tensor = input[img_index,:,:,:],
-                       filename = target_img_path)
+            save_image(tensor=input[img_index, :, :, :],
+                       filename=target_img_path)
             counter += 1
 
         if i % args.print_freq == 0:
             print('Progress: [{0}/{1}]\t'
-                   .format(
-                   i, len(data_loader.loader)))
+                .format(
+                i, len(data_loader.loader)))
 
 
 if __name__ == '__main__':
